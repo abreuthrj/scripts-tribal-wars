@@ -1,12 +1,12 @@
-# DOM Scripts for making tribal wars easier
+# DOM Script helpers for tribal wars
 
 ## Summary
 1. [Autobuilder](#autobuilder)
 
 ### Autobuilder
-Autobuilder was made to be running in the Main Building page, it can be located in the right bottom corner.
+Autobuilder works in the Main Building page and displays a bottom right panel with infos and buttons.
 
 Features:
-- Auto fast-upgrade buildings when is 3min left
-- Allows you to auto-upgrade every building automatically following the default order of fastest first
-- Provides you a queue so you can schedule upgrades on your own.
+- Auto fast-upgrade buildings at 3min left
+- Auto-upgrade every building automatically in shortest first order
+- Provides you a queue so you can schedule upgrades on your own
