@@ -1,7 +1,15 @@
 # DOM Script helpers for tribal wars
 
 ## Summary
-1. [Autobuilder](#autobuilder)
+1. [How it works](#how-it-works)
+2. [Scripts](#scripts)
+   - [Autobuilder](#autobuilder)
+
+## How it works
+All the scripts were built to run by copying and pasting its content in the browser's console.
+You can also automate by using a script injector extension such as [JavaScript Injector](https://chrome.google.com/webstore/detail/javascript-injector/knmnopfmccchnnfdoiddbihbcboeedll).
+
+## Scripts
 
 ### Autobuilder
 Autobuilder works in the Main Building page and displays a bottom right panel with infos and buttons.
