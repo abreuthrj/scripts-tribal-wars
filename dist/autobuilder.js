@@ -194,9 +194,10 @@ const _customscript_watcher_getBuildingsList = () => {
       .getAttribute("data-title"),
     id: b.id,
     level: parseInt(
-      b
-        .querySelector("td:first-child span:last-child")
-        .innerHTML.match(/([0-9]+)/)[0]
+      (
+        (b.querySelector("td:first-child span:last-child") || null)
+          ?.innerHTML || "1000"
+      ).match(/([0-9]+)/)[0]
     ),
     resources: {
       wood: parseInt(b.querySelector("td.cost_wood").getAttribute("data-cost")),
@@ -242,10 +243,11 @@ const _customscript_watcher_getNextBuilding = () => {
     );
 
     for (let queuedBuilding of _customscript_watcher_priorities.queue) {
-      let found = resultantList.find((b) => b.id == queuedBuilding);
-      if (found) {
-        _customscript_watcher_priorities.queue.shift();
-        return found;
+      let found = resultantList.findIndex((b) => b.id == queuedBuilding);
+      if (found !== -1) {
+        let buf = resultantList[found];
+        _customscript_watcher_priorities.queue.splice(found, 1);
+        return buf;
       }
     }
   }
