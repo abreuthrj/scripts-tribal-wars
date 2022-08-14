@@ -1,0 +1,31 @@
+{
+  "name": "sandbox-scripts-tribalwars",
+  "version": "1.0.0",
+  "description": "A pack of scripts to help with tribal wars gameplay",
+  "main": "index.js",
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "minify": "^9.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abreuthrj/scripts-tribal-wars.git"
+  },
+  "keywords": [
+    "scripts",
+    "tribal",
+    "tribal-wars",
+    "tribal",
+    "wars"
+  ],
+  "author": "abreuthrj",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abreuthrj/scripts-tribal-wars/issues"
+  },
+  "homepage": "https://github.com/abreuthrj/scripts-tribal-wars#readme"
+}
