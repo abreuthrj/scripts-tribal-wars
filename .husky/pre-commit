@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-yarn -s minify src/autobuilder.js > dist/autobuilder.js --silent
+yarn -s minify src/autobuilder.js > dist/autobuilder.js
