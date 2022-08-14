@@ -64,7 +64,7 @@ const _customscript_watcher_buildDOM = () => {
 
   span.style =
     "position:fixed;bottom:0;right:0;padding:.5em;background-color:#333333a0;color:white;z-index:100000";
-  dynamicContent.style = "display:block;";
+  dynamicContent.style = "display:block;margin-bottom:1rem;";
   staticContent.style = "display:block;";
 
   span.id = "_customscript_watcher_displayDOM";
@@ -74,6 +74,10 @@ const _customscript_watcher_buildDOM = () => {
   document.body.appendChild(span);
   span.appendChild(dynamicContent);
   span.appendChild(staticContent);
+
+  let cachedQueue = window.localStorage.getItem("_customscript_watcher_queue");
+  if (cachedQueue)
+    _customscript_watcher_priorities.queue = JSON.parse(cachedQueue);
 };
 
 /**
@@ -107,15 +111,17 @@ const _customscript_watcher_updateDOM = () => {
     JSON.stringify(_customscript_watcher_buildingsBuffer)
   ) {
     let staticContentHTML = "";
-
-    staticContentHTML = `<select id="_customscript_watcher_selectBuildingDOM">${buildings
+    let selectOptions = buildings
       .map((b) => `<option value="${b.id}">${b.name}</option>`)
-      .join(
-        ""
-      )}</select><button id="_customscript_watcher_pushToQueueButtonDOM">ADD</button>`;
-    staticContentHTML = `${staticContentHTML}<br>Scheduler <button id="_customscript_watcher_schedulerToggleButtonDOM">${
-      _customscript_watcher_schedulerON ? "ON" : "OFF"
-    }</button>`;
+      .join("");
+
+    staticContentHTML = `
+    <select id="_customscript_watcher_selectBuildingDOM">${selectOptions}</select>
+    <button id="_customscript_watcher_pushToQueueButtonDOM">ADD</button>
+    <button id="_customscript_watcher_popFromQueueButtonDOM">REM</button>
+    <br>
+    Scheduler <button id="_customscript_watcher_schedulerToggleButtonDOM">OFF</button>
+    `;
 
     staticContent.innerHTML = staticContentHTML;
 
@@ -131,6 +137,20 @@ const _customscript_watcher_updateDOM = () => {
       addToQueueButtonDOM.addEventListener(
         "click",
         _customscript_watcher_pushToQueueOnce
+      );
+    }
+    const popFromQueueButtonDOM = document.querySelector(
+      "#_customscript_watcher_popFromQueueButtonDOM"
+    );
+
+    if (popFromQueueButtonDOM) {
+      popFromQueueButtonDOM.removeEventListener(
+        "click",
+        _customscript_watcher_popFromQueueOnce
+      );
+      popFromQueueButtonDOM.addEventListener(
+        "click",
+        _customscript_watcher_popFromQueueOnce
       );
     }
 
@@ -153,7 +173,7 @@ const _customscript_watcher_updateDOM = () => {
  * @returns An object of data to be displayed
  */
 const _customscript_watcher_buildInfoList = () => {
-  const title = "watching";
+  const title = "Watching";
 
   const resources = _customscript_watcher_getMainResources();
   const [h, m, s] = _customscript_watcher_timeleft();
@@ -188,31 +208,53 @@ const _customscript_watcher_getBuildingsList = () => {
     ...document.querySelectorAll("#buildings tr:not(:first-child)"),
   ].filter((b) => b.querySelectorAll("td").length > 2);
 
-  return buildings.map((b) => ({
-    name: b
+  return buildings.map((b) => {
+    let name = b
       .querySelector("td:first-child img:first-child")
-      .getAttribute("data-title"),
-    id: b.id,
-    level: parseInt(
-      (
-        (b.querySelector("td:first-child span:last-child") || null)
-          ?.innerHTML || "1000"
-      ).match(/([0-9]+)/)[0]
-    ),
-    resources: {
+      .getAttribute("data-title");
+
+    let id = b.id;
+
+    let level = -1;
+    try {
+      level = parseInt(
+        b
+          .querySelector("td:first-child span:last-child")
+          .innerHTML.match(/([0-9]+)/)[0]
+      );
+    } catch (err) {
+      console.log(err);
+    }
+
+    let resources = {
       wood: parseInt(b.querySelector("td.cost_wood").getAttribute("data-cost")),
       stone: parseInt(
         b.querySelector("td.cost_stone").getAttribute("data-cost")
       ),
       iron: parseInt(b.querySelector("td.cost_iron").getAttribute("data-cost")),
-    },
-    duration: b
-      .querySelector(".cost_iron~td")
-      .innerHTML.match(/([0-9]+):([0-9]+):([0-9]+)/)[0]
-      .split(":")
-      .map((s, i) => parseInt(s) * (i == 0 ? 3600 : i == 1 ? 60 : 1))
-      .reduce((prev, cur) => prev + cur, 0),
-  }));
+    };
+
+    let duration = 100000000;
+
+    try {
+      duration = b
+        .querySelector(".cost_iron~td")
+        .innerHTML.match(/([0-9]+):([0-9]+):([0-9]+)/)[0]
+        .split(":")
+        .map((s, i) => parseInt(s) * (i == 0 ? 3600 : i == 1 ? 60 : 1))
+        .reduce((prev, cur) => prev + cur, 0);
+    } catch (err) {
+      console.log(err);
+    }
+
+    return {
+      name,
+      id,
+      level,
+      resources,
+      duration,
+    };
+  });
 };
 
 /**
@@ -242,12 +284,15 @@ const _customscript_watcher_getNextBuilding = () => {
       _customscript_watcher_priorities.queue.includes(b.id)
     );
 
-    for (let queuedBuilding of _customscript_watcher_priorities.queue) {
-      let found = resultantList.findIndex((b) => b.id == queuedBuilding);
-      if (found !== -1) {
-        let buf = resultantList[found];
-        _customscript_watcher_priorities.queue.splice(found, 1);
-        return buf;
+    for (let [
+      idx,
+      queuedBuilding,
+    ] of _customscript_watcher_priorities.queue.entries()) {
+      let found = resultantList.find((b) => b.id == queuedBuilding);
+
+      if (found) {
+        _customscript_watcher_priorities.queue.splice(idx, 1);
+        return found;
       }
     }
   }
@@ -304,6 +349,14 @@ const _customscript_watcher_pushToQueueOnce = () => {
   _customscript_watcher_priorities.queue.push(
     document.querySelector("#_customscript_watcher_selectBuildingDOM").value
   );
+  _customscript_watcher_cacheQueue();
+  _customscript_watcher_updateDOM();
+};
+
+const _customscript_watcher_popFromQueueOnce = () => {
+  console.log("REMOVING ", _customscript_watcher_priorities.queue[0]);
+  _customscript_watcher_priorities.queue.shift();
+  _customscript_watcher_cacheQueue();
   _customscript_watcher_updateDOM();
 };
 
@@ -328,6 +381,7 @@ const _customscript_watcher_runScheduler = () => {
 
   if (upgradeDOM) {
     _customscript_watcher_nextBuildingBuffer = null;
+    _customscript_watcher_cacheQueue();
     upgradeDOM.click();
   }
 };
@@ -347,6 +401,16 @@ const _customscript_watcher_toggleSchedulerONOFF = () => {
   toggleSchedulerButtonDOM.innerHTML = _customscript_watcher_schedulerON
     ? "ON"
     : "OFF";
+};
+
+const _customscript_watcher_cacheQueue = () => {
+  let bufQueue = [..._customscript_watcher_priorities.queue];
+
+  // Save with next building in case of leaving the page
+  if (_customscript_watcher_nextBuildingBuffer)
+    bufQueue = [_customscript_watcher_nextBuildingBuffer.id, ...bufQueue];
+
+  window.localStorage.setItem("_customscript_watcher_queue", JSON.stringify());
 };
 
 /**
