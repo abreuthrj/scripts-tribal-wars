@@ -77,7 +77,11 @@ const _customscript_watcher_buildDOM = () => {
 
   let cachedQueue = window.localStorage.getItem("_customscript_watcher_queue");
   if (cachedQueue)
-    _customscript_watcher_priorities.queue = JSON.parse(cachedQueue);
+    try {
+      _customscript_watcher_priorities.queue = JSON.parse(cachedQueue);
+    } catch (err) {
+      console.log(err);
+    }
 };
 
 /**
@@ -114,13 +118,14 @@ const _customscript_watcher_updateDOM = () => {
     let selectOptions = buildings
       .map((b) => `<option value="${b.id}">${b.name}</option>`)
       .join("");
+    let schedulerState = _customscript_watcher_schedulerON ? "ON" : "OFF";
 
     staticContentHTML = `
     <select id="_customscript_watcher_selectBuildingDOM">${selectOptions}</select>
     <button id="_customscript_watcher_pushToQueueButtonDOM">ADD</button>
     <button id="_customscript_watcher_popFromQueueButtonDOM">REM</button>
     <br>
-    Scheduler <button id="_customscript_watcher_schedulerToggleButtonDOM">OFF</button>
+    Scheduler <button id="_customscript_watcher_schedulerToggleButtonDOM">${schedulerState}</button>
     `;
 
     staticContent.innerHTML = staticContentHTML;
@@ -410,7 +415,10 @@ const _customscript_watcher_cacheQueue = () => {
   if (_customscript_watcher_nextBuildingBuffer)
     bufQueue = [_customscript_watcher_nextBuildingBuffer.id, ...bufQueue];
 
-  window.localStorage.setItem("_customscript_watcher_queue", JSON.stringify());
+  window.localStorage.setItem(
+    "_customscript_watcher_queue",
+    JSON.stringify(bufQueue)
+  );
 };
 
 /**

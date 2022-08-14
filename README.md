@@ -18,3 +18,8 @@ Features:
 - Auto fast-upgrade buildings at 3min left
 - Auto-upgrade every building automatically in shortest first order
 - Provides you a queue so you can schedule upgrades on your own
+
+**Running**
+```
+fetch('https://raw.githubusercontent.com/abreuthrj/scripts-tribal-wars/main/dist/autobuilder.js').then(res => eval(res))
+```
